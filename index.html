@@ -11,7 +11,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; display: flex; }
@@ -23,15 +22,13 @@
         .tab-bor, .tab-prod { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; border: 1.5px solid #1e293b; }
         .tab-bor th, .tab-bor td, .tab-prod th, .tab-prod td { border: 1px solid #cbd5e1; padding: 6px 2px; text-align: center; }
         .header-azul { background-color: #1e3a8a !important; color: white !important; font-weight: bold; text-transform: uppercase; }
-        
-        /* LOGOS AJUSTADOS */
         .logo-box { width: 250px; height: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        
         .faixa-indicadores { background-color: #1e3a8a; color: white; display: flex; justify-content: space-around; padding: 12px; margin-bottom: 5px; border-radius: 4px; }
         .ind-item { text-align: center; border-right: 1px solid rgba(255,255,255,0.2); flex: 1; }
         .ind-value { font-size: 15px; font-weight: 800; display: block; }
         textarea { width: 100%; height: 90px; resize: none; border: 1px solid #e2e8f0; font-size: 11px; padding: 8px; border-radius: 4px; line-height: 1.4; }
+        .btnFonte { padding: 2px 5px; font-size: 9px; border: 1px solid #cbd5e1; background: #fff; border-radius: 3px; cursor: pointer; font-weight: bold; color: #1e3a8a; }
         #modalConfig { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; }
         .sub-header-data { font-size: 8px; font-weight: bold; display: block; opacity: 0.8; }
         @media print { .no-print { display: none !important; } .painel-container { border: none; margin: 0; width: 100%; box-shadow: none; } }
@@ -71,21 +68,13 @@
 
     <main class="flex-1 ml-[60px]">
         <div id="telaPrincipal" class="painel-container">
-            <div class="flex justify-between items-center mb-4 min-h-[100px]">
-                <div class="logo-box">
-                 <a href="https://www.kaeferteckma.com.br/" target="_blank">
-                        <img src="https://i.imgur.com/d59sokh.png" alt="Logo Teckma">
-                    </a>
-                </div>
-                
+            <div class="flex justify-between items-center mb-4">
+                <div class="logo-box"><img src="https://i.imgur.com/d59sokh.png" alt="Logo Teckma"></div>
                 <div class="text-center flex-1">
                     <h1 class="text-3xl font-black uppercase tracking-tight text-blue-900">Painel de Bordo</h1>
-                    <p id="dspClienteObra" class="text-[11px] font-bold text-slate-500 uppercase">GERDAU | MOGI DAS CRUZES</p>
+                    <p id="dspClienteObra" class="text-[11px] font-bold text-slate-500 uppercase">CARREGANDO...</p>
                 </div>
-
-                <div class="logo-box">
-                    <img src="https://i.postimg.cc/vmD1STXx/gerdau-logo.jpg">
-                </div>
+                <div class="logo-box"><img src="https://i.postimg.cc/vmD1STXx/gerdau-logo.jpg"></div>
             </div>
 
             <div class="faixa-indicadores">
@@ -131,11 +120,23 @@
             <div class="grid grid-cols-12 gap-6">
                 <div class="col-span-4 flex flex-col gap-4">
                     <div class="border p-3 bg-slate-50 rounded shadow-sm">
-                        <p class="text-[9px] font-bold uppercase mb-1">Análise de Planejamento</p>
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] font-bold uppercase">Análise de Planejamento</p>
+                            <div class="flex gap-1 no-print">
+                                <button onclick="ajustarFonte('obsPlan', 9)" class="btnFonte">9</button>
+                                <button onclick="ajustarFonte('obsPlan', 11)" class="btnFonte">11</button>
+                            </div>
+                        </div>
                         <textarea id="obsPlan" onblur="salvarObs()"></textarea>
                     </div>
                     <div class="border p-3 bg-slate-50 rounded shadow-sm">
-                        <p class="text-[9px] font-bold uppercase mb-1">Gestão de Engenharia</p>
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="text-[9px] font-bold uppercase">Gestão de Engenharia</p>
+                            <div class="flex gap-1 no-print">
+                                <button onclick="ajustarFonte('obsEng', 9)" class="btnFonte">9</button>
+                                <button onclick="ajustarFonte('obsEng', 11)" class="btnFonte">11</button>
+                            </div>
+                        </div>
                         <textarea id="obsEng" onblur="salvarObs()"></textarea>
                     </div>
                 </div>
@@ -179,7 +180,6 @@
     </div>
 
 <script>
-    // FIREBASE GERDAU - CONFIGURAÇÃO ISOLADA
     const firebaseConfig = {
       apiKey: "AIzaSyCfybt3i0VMxIyA9p1bPh8jNIptY-KnosI",
       authDomain: "painel-de-bordo-gerdau.firebaseapp.com",
@@ -190,10 +190,11 @@
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // Restante da lógica (curva, efetivo, chart, etc) conforme original
     let curva = [], efetivo = [], chartInstance = null;
     Chart.register(ChartDataLabels);
+
+    const fNum = v => v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    function ajustarFonte(id, tamanho) { document.getElementById(id).style.fontSize = tamanho + 'px'; }
 
     function irPara(tela) {
         document.getElementById('telaPrincipal').classList.toggle('hidden', tela !== 'principal');
@@ -216,12 +217,12 @@
             const el = document.getElementById('selSemana');
             if(!el.options.length) {
                 const s = [...new Set(curva.map(x=>x.Semana))].sort((a,b)=> parseInt(a.replace(/\D/g,'')) - parseInt(b.replace(/\D/g,'')));
-                el.innerHTML = '';
-                s.forEach(x => el.add(new Option(x, x)));
+                el.innerHTML = ''; s.forEach(x => el.add(new Option(x, x)));
                 const u = curva.filter(x => x.Avanco_Realizado_Perc != null).pop();
                 el.value = u ? u.Semana : s[0];
             }
-            carregarObsSemana(el.value); processarPainel(); renderizarGrafico(); gerarEstudoProdutividade();
+            carregarObsSemana(el.value); processarPainel(); renderizarGrafico(); 
+            if(!document.getElementById('telaProdutividade').classList.contains('hidden')) gerarEstudoProdutividade();
         }
     });
 
@@ -232,7 +233,7 @@
                 const bstr = evt.target.result;
                 const wb = XLSX.read(bstr, {type:'binary'});
                 const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                db.ref('painel/' + pathDb).set(data).then(() => alert(pathDb.toUpperCase() + " Sincronizado na Gerdau!"));
+                db.ref('painel/' + pathDb).set(data).then(() => alert(pathDb.toUpperCase() + " Sincronizado!"));
             };
             reader.readAsBinaryString(e.target.files[0]);
         };
@@ -253,7 +254,7 @@
         });
     }
 
-    document.getElementById('selSemana').onchange = (e) => { carregarObsSemana(e.target.value); processarPainel(); renderizarGrafico(); };
+    document.getElementById('selSemana').onchange = (e) => { carregarObsSemana(e.target.value); processarPainel(); renderizarGrafico(); if(!document.getElementById('telaProdutividade').classList.contains('hidden')) gerarEstudoProdutividade(); };
 
     function processarPainel() {
         const sSel = document.getElementById('selSemana').value;
@@ -349,15 +350,27 @@
             html += `<tr><td class="font-bold">${sem}</td><td>${fNum(acmGasto)}</td><td>${fNum(acmAgregado)}</td><td>${fNum(gastoSem)}</td><td>${fNum(agregSem)}</td><td class="font-bold ${(prodSem < 1 ? 'text-red-600' : 'text-green-600')}">${(prodSem*100).toFixed(1)}%</td><td class="text-red-500">${perdSem > 0 ? fNum(perdSem) : '-'}</td><td class="font-bold">${(acmAgregado/acmGasto*100).toFixed(1)}%</td></tr>`;
         });
         document.getElementById('corpoEstudoProdutividade').innerHTML = html;
-        document.getElementById('gridResumoProd').innerHTML = `<div class="bg-blue-50 p-4 border-l-4 border-blue-900 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">HH Gasto Total</span><div class="text-xl font-black">${fNum(acmGasto)}</div></div><div class="bg-green-50 p-4 border-l-4 border-green-600 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">HH Agregado Total</span><div class="text-xl font-black">${fNum(acmAgregado)}</div></div><div class="bg-slate-50 p-4 border-l-4 border-slate-900 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">Produtividade Geral</span><div class="text-xl font-black text-blue-900">${(acmGasto > 0 ? (acmAgregado/acmGasto*100).toFixed(1) : 0)}%</div></div><div class="bg-red-50 p-4 border-l-4 border-red-600 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">Total Horas Perdidas</span><div class="text-xl font-black text-red-600">${fNum(totalPerdidas)}</div></div>`;
+        document.getElementById('gridResumoProd').innerHTML = `
+            <div class="bg-blue-50 p-4 border-l-4 border-blue-900 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">HH Gasto Total</span><div class="text-xl font-black">${fNum(acmGasto)}</div></div>
+            <div class="bg-green-50 p-4 border-l-4 border-green-600 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">HH Agregado Total</span><div class="text-xl font-black">${fNum(acmAgregado)}</div></div>
+            <div class="bg-slate-50 p-4 border-l-4 border-slate-900 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">Produtividade Geral</span><div class="text-xl font-black text-blue-900">${(acmGasto > 0 ? (acmAgregado/acmGasto*100).toFixed(1) : 0)}%</div></div>
+            <div class="bg-red-50 p-4 border-l-4 border-red-600 rounded shadow-sm"><span class="text-[10px] font-bold text-slate-500 uppercase">Total Horas Perdidas</span><div class="text-xl font-black text-red-600">${fNum(totalPerdidas)}</div></div>`;
     }
-    const fNum = v => v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-    
+
     function salvarConfig() {
-        const c = { cliente: document.getElementById('cfgCliente').value, obra: document.getElementById('cfgObra').value, inicio: document.getElementById('cfgInicio').value, fim: document.getElementById('cfgFim').value, hh: document.getElementById('cfgHH').value };
-        db.ref('painel/config').update(c).then(() => { document.getElementById('modalConfig').style.display = 'none'; alert("Configuração Gerdau Salva!"); });
+        const c = { 
+            cliente: document.getElementById('cfgCliente').value, 
+            obra: document.getElementById('cfgObra').value, 
+            inicio: document.getElementById('cfgInicio').value, 
+            fim: document.getElementById('cfgFim').value, 
+            hh: document.getElementById('cfgHH').value 
+        };
+        db.ref('painel/config').update(c).then(() => { 
+            document.getElementById('modalConfig').style.display = 'none'; 
+            alert("Configuração Gerdau Salva!"); 
+        });
     }
-    
+
     function gerarPDF() {
         const opt = { margin: 5, filename: 'Relatorio_Gerdau.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' } };
         html2pdf().set(opt).from(document.body).save();
